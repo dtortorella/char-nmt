@@ -49,3 +49,25 @@ def evaluate_corpus(references, candidates, language):
     tokenized_references = [[tokenize(reference, language)] for reference in references]
     tokenized_candidates = [tokenize(candidate, language) for candidate in candidates]
     return nltk.translate.bleu_score.corpus_bleu(tokenized_references, tokenized_candidates)
+
+def map_characters_to_integers(characters):
+    """Builds a character to integer map according to a string of unique characters.
+
+    Args:
+        characters (str): String containing unique characters.
+    
+    Returns:
+        Map[char->int]: Map of characters to integer indexes.
+    """
+    return {characters[i]: i for i in range(len(characters))}
+
+def encode_for_embedding(sentence, characters):
+    """Encodes a string into an integer sequece.
+
+    Args:
+        characters (Map[char->int]): Map of characters to integer indexes.
+    
+    Returns:
+        List[int]: List of integer indexes, according to characters map.
+    """
+    return [characters[char] for char in sentence]
