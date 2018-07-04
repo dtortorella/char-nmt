@@ -98,12 +98,17 @@ def keras_preprocess(source_file, target_file):
     target_characters = set()
 
     with open(source_file, 'r', encoding='utf-8') as f:
-        lines = f.read().split('\n')
-        for line in lines[: len(lines) - 1]:
-            source_texts.append(line)
-            for char in line:
-                if char not in source_characters:
-                    source_characters.add(char)
+        max_line_length=0
+        num_lines=0
+        while line = f.readline():
+            if (len(line) > max_line_legnth):
+                    max_line_length = len(line)
+            num_lines += 1
+        #for line in lines[: len(lines) - 1]:
+            #source_texts.append(line)
+            #for char in line:
+               # if char not in source_characters:
+                  #  source_characters.add(char)
 
 
     with open(target_file, 'r', encoding='utf-8') as f:

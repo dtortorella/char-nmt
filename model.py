@@ -5,6 +5,7 @@ from keras.layers import *
 # model parameters
 SOURCE_EMBEDDING = 64
 SOURCE_STATE = 32
+SOURCE_STATE_HALF = 16
 TARGET_EMBEDDING = 64
 TARGET_STATE = 16
 ATTENTION_ENERGY = 16
@@ -13,7 +14,7 @@ def next_character_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_NUM_CHARS):
     # source sentence (fixed length) input, embedding, and sequence of hidden states
     source_input = Input(shape=(SOURCE_SEQ_LEN,), dtype='int32')
     source_embedding = Embedding(SOURCE_NUM_CHARS, SOURCE_EMBEDDING, name='source_embedding')(source_input)
-    source_hidden_states = Bidirectional(LSTM(SOURCE_STATE/2, return_sequences=True, name='source_hidden_states'))(source_embedding)
+    source_hidden_states = Bidirectional(LSTM(SOURCE_STATE_HALF, return_sequences=True, name='source_hidden_states'))(source_embedding)
 
     # target sequence (variable length) input, embedding, and hidden state
     target_input = Input(shape=(None,), dtype='int32')
@@ -41,7 +42,7 @@ def sequence_training_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_SEQ_LEN, TA
     # source sentence (fixed length) input, embedding, and sequence of hidden states
     source_input = Input(shape=(SOURCE_SEQ_LEN,), dtype='int32')
     source_embedding = Embedding(SOURCE_NUM_CHARS, SOURCE_EMBEDDING, name='source_embedding')(source_input)
-    source_hidden_states = Bidirectional(LSTM(SOURCE_STATE/2, return_sequences=True, name='source_hidden_states'))(source_embedding)
+    source_hidden_states = Bidirectional(LSTM(SOURCE_STATE_HALF, return_sequences=True, name='source_hidden_states'))(source_embedding)
 
     # target sequence (fixed length) input, embedding, and hidden state
     target_input = Input(shape=(TARGET_SEQ_LEN,), dtype='int32')
