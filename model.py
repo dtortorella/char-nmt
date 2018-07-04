@@ -2,22 +2,29 @@ import keras
 from keras import Model
 from keras.layers import *
 
+# model parameters
+SOURCE_EMBEDDING = 64
+SOURCE_STATE = 32
+TARGET_EMBEDDING = 64
+TARGET_STATE = 16
+ATTENTION_ENERGY = 16
+
 def next_character_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_NUM_CHARS):
     # source sentence (fixed length) input, embedding, and sequence of hidden states
     source_input = Input(shape=(SOURCE_SEQ_LEN,), dtype='int32')
-    source_embedding = Embedding(SOURCE_NUM_CHARS, 64, name='source_embedding')(source_input)
-    source_hidden_states = Bidirectional(LSTM(16, return_sequences=True, name='source_hidden_states'))(source_embedding)
+    source_embedding = Embedding(SOURCE_NUM_CHARS, SOURCE_EMBEDDING, name='source_embedding')(source_input)
+    source_hidden_states = Bidirectional(LSTM(SOURCE_STATE/2, return_sequences=True, name='source_hidden_states'))(source_embedding)
 
     # target sequence (variable length) input, embedding, and hidden state
     target_input = Input(shape=(None,), dtype='int32')
-    target_embedding = Embedding(TARGET_NUM_CHARS, 64, name='target_embedding')(target_input)
-    target_hidden_state = LSTM(16, return_sequences=False, name='target_hidden_state')(target_embedding)
+    target_embedding = Embedding(TARGET_NUM_CHARS, TARGET_EMBEDDING, name='target_embedding')(target_input)
+    target_hidden_state = LSTM(TARGET_STATE, return_sequences=False, name='target_hidden_state')(target_embedding)
 
     # attention mechanism (Bahdanau et al, 2015)
     repeat_target_hidden_state = RepeatVector(SOURCE_SEQ_LEN)(target_hidden_state)
     concatenate_source_target_hidden = Concatenate()([source_hidden_states, repeat_target_hidden_state])
 
-    attention_pre_energies = TimeDistributed(Dense(16, activation='tanh'), name='attention_pre_energies')(concatenate_source_target_hidden)
+    attention_pre_energies = TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh'), name='attention_pre_energies')(concatenate_source_target_hidden)
     attention_energies = TimeDistributed(Dense(1, activation='linear'), name='attention_energies')(attention_pre_energies)
     attention_energies = Reshape((SOURCE_SEQ_LEN,))(attention_energies)
     attention_weights = Activation('softmax')(attention_energies)
@@ -33,24 +40,24 @@ def next_character_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_NUM_CHARS):
 def sequence_training_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_SEQ_LEN, TARGET_NUM_CHARS):
     # source sentence (fixed length) input, embedding, and sequence of hidden states
     source_input = Input(shape=(SOURCE_SEQ_LEN,), dtype='int32')
-    source_embedding = Embedding(SOURCE_NUM_CHARS, 64, name='source_embedding')(source_input)
-    source_hidden_states = Bidirectional(LSTM(16, return_sequences=True, name='source_hidden_states'))(source_embedding)
+    source_embedding = Embedding(SOURCE_NUM_CHARS, SOURCE_EMBEDDING, name='source_embedding')(source_input)
+    source_hidden_states = Bidirectional(LSTM(SOURCE_STATE/2, return_sequences=True, name='source_hidden_states'))(source_embedding)
 
     # target sequence (fixed length) input, embedding, and hidden state
     target_input = Input(shape=(TARGET_SEQ_LEN,), dtype='int32')
-    target_embedding = Embedding(TARGET_NUM_CHARS, 64, name='target_embedding')(target_input)
-    target_hidden_state_sequence = LSTM(16, return_sequences=True, name='target_hidden_state')(target_embedding)
+    target_embedding = Embedding(TARGET_NUM_CHARS, TARGET_EMBEDDING, name='target_embedding')(target_input)
+    target_hidden_state_sequence = LSTM(TARGET_STATE, return_sequences=True, name='target_hidden_state')(target_embedding)
 
     # attention mechanism (Bahdanau et al, 2015)
-    target_hidden_state_sequence = Reshape((TARGET_SEQ_LEN, 16))(target_hidden_state_sequence)
+    target_hidden_state_sequence = Reshape((TARGET_SEQ_LEN, TARGET_STATE))(target_hidden_state_sequence)
     repeat_target_hidden_state_sequence = TimeDistributed(RepeatVector(SOURCE_SEQ_LEN))(target_hidden_state_sequence) # (Ty, Tx, #s)
-    source_hidden_states = Reshape((SOURCE_SEQ_LEN, 32))(source_hidden_states)
+    source_hidden_states = Reshape((SOURCE_SEQ_LEN, SOURCE_STATE))(source_hidden_states)
     repeat_source_hidden_states = TimeDistributed(RepeatVector(TARGET_SEQ_LEN))(source_hidden_states) # (Tx, Ty, #h)
 
     permuted_repeat_source_hidden_states = Permute((2, 1, 3))(repeat_source_hidden_states) # (Ty, Tx, #h)
     concatenate_source_target_hidden_matrix = Concatenate()([permuted_repeat_source_hidden_states, repeat_target_hidden_state_sequence]) # (Ty, Tx, #h+#s)
     
-    attention_pre_energies = TimeDistributed(TimeDistributed(Dense(16, activation='tanh')), name='attention_pre_energies')(concatenate_source_target_hidden_matrix) # (Ty, Tx, 16)
+    attention_pre_energies = TimeDistributed(TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh')), name='attention_pre_energies')(concatenate_source_target_hidden_matrix) # (Ty, Tx, 16)
     attention_energies = TimeDistributed(TimeDistributed(Dense(1, activation='linear')), name='attention_energies')(attention_pre_energies) # (Ty, Tx, 1)
     attention_energies = Reshape((TARGET_SEQ_LEN, SOURCE_SEQ_LEN))(attention_energies) # (Ty, Tx)
     attention_weights_sequence = TimeDistributed(Activation('softmax'))(attention_energies) # (Ty, Tx)
