@@ -1,5 +1,7 @@
 import sys
 import datetime
+import numpy as np
+from keras.callbacks import ModelCheckpoint
 
 import data
 import model
@@ -23,4 +25,4 @@ training_model.compile(optimizer='adam', loss='sparse_categorical_crossentropy',
 
 checkpoint = ModelCheckpoint(filepath=source_language+'-'+target_language+'_'+datetime.datetime.now().isoformat()+'_{epoch:03d}_{acc:.4f}.hdf5')
 
-training_model.fit(x=[source_data, target_data[:,:-1]], y=target_data[:,1:], batch_size=20, epochs=5, callbacks=[checkpoint])
+training_model.fit(x=[source_data, target_data[:,:-1]], y=np.expand_dims(target_data[:,1:], axis=-1), batch_size=20, epochs=5, callbacks=[checkpoint])
