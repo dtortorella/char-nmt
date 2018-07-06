@@ -65,9 +65,23 @@ def encode_for_embedding(sentence, characters):
     """Encodes a string into an integer sequece.
 
     Args:
+        sentence (str): Sentence string.
         characters (Map[char->int]): Map of characters to integer indexes.
     
     Returns:
         List[int]: List of integer indexes, according to characters map.
     """
     return [characters[char] for char in sentence]
+
+def decode_from_char_map(sentence, characters):
+    """Decodes an integer list into a string.
+
+    Args:
+        sentence (List[int]): Sentence made of indexes.
+        characters (Map[char->int]): Map of characters to integer indexes.
+    
+    Returns:
+        str: String from integer indexes, according to characters map.
+    """
+    reverse_map = {index: char for char, index in characters.items()}
+    return ''.join([reverse_map[index] for index in sentence])
