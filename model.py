@@ -25,14 +25,26 @@ def next_character_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_NUM_CHARS):
     repeat_target_hidden_state = RepeatVector(SOURCE_SEQ_LEN)(target_hidden_state)
     concatenate_source_target_hidden = Concatenate()([source_hidden_states, repeat_target_hidden_state])
 
-    attention_pre_energies = TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh'), name='attention_pre_energies')(concatenate_source_target_hidden)
-    attention_energies = TimeDistributed(Dense(1, activation='linear'), name='attention_energies')(attention_pre_energies)
-    attention_energies = Reshape((SOURCE_SEQ_LEN,))(attention_energies)
-    attention_weights = Activation('softmax')(attention_energies)
-    context_vector = Dot(axes=(1,1))([attention_weights, source_hidden_states])
+    attention_pre_energies1 = TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh'), name='attention_pre_energies1')(concatenate_source_target_hidden)
+    attention_energies1 = TimeDistributed(Dense(1, activation='linear'), name='attention_energies1')(attention_pre_energies1)
+    attention_energies1 = Reshape((SOURCE_SEQ_LEN,))(attention_energies1)
+    attention_weights1 = Activation('softmax')(attention_energies1)
+    context_vector1 = Dot(axes=(1,1))([attention_weights1, source_hidden_states])
+
+    attention_pre_energies2 = TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh'), name='attention_pre_energies2')(concatenate_source_target_hidden)
+    attention_energies2 = TimeDistributed(Dense(1, activation='linear'), name='attention_energies2')(attention_pre_energies2)
+    attention_energies2 = Reshape((SOURCE_SEQ_LEN,))(attention_energies2)
+    attention_weights2 = Activation('softmax')(attention_energies2)
+    context_vector2 = Dot(axes=(1,1))([attention_weights2, source_hidden_states])
+
+    attention_pre_energies3 = TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh'), name='attention_pre_energies3')(concatenate_source_target_hidden)
+    attention_energies3 = TimeDistributed(Dense(1, activation='linear'), name='attention_energies3')(attention_pre_energies3)
+    attention_energies3 = Reshape((SOURCE_SEQ_LEN,))(attention_energies3)
+    attention_weights3 = Activation('softmax')(attention_energies3)
+    context_vector3 = Dot(axes=(1,1))([attention_weights3, source_hidden_states])
 
     # character generator network
-    concatenate_target_and_context = Concatenate()([target_hidden_state, context_vector])
+    concatenate_target_and_context = Concatenate()([target_hidden_state, context_vector1, context_vector2, context_vector3])
     next_character_distribution = Dense(TARGET_NUM_CHARS, activation='softmax', name='generator_distribution')(concatenate_target_and_context)
 
     # next character generator model
@@ -58,14 +70,26 @@ def sequence_training_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_SEQ_LEN, TA
     permuted_repeat_source_hidden_states = Permute((2, 1, 3))(repeat_source_hidden_states) # (Ty, Tx, #h)
     concatenate_source_target_hidden_matrix = Concatenate()([permuted_repeat_source_hidden_states, repeat_target_hidden_state_sequence]) # (Ty, Tx, #h+#s)
     
-    attention_pre_energies = TimeDistributed(TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh')), name='attention_pre_energies')(concatenate_source_target_hidden_matrix) # (Ty, Tx, 16)
-    attention_energies = TimeDistributed(TimeDistributed(Dense(1, activation='linear')), name='attention_energies')(attention_pre_energies) # (Ty, Tx, 1)
-    attention_energies = Reshape((TARGET_SEQ_LEN, SOURCE_SEQ_LEN))(attention_energies) # (Ty, Tx)
-    attention_weights_sequence = TimeDistributed(Activation('softmax'))(attention_energies) # (Ty, Tx)
-    context_vector_sequence = Dot(axes=(2,1))([attention_weights_sequence, source_hidden_states]) # (Tx, Tx) * (Tx, #h) -> (Ty, #h)
+    attention_pre_energies1 = TimeDistributed(TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh')), name='attention_pre_energies1')(concatenate_source_target_hidden_matrix) # (Ty, Tx, 16)
+    attention_energies1 = TimeDistributed(TimeDistributed(Dense(1, activation='linear')), name='attention_energies1')(attention_pre_energies1) # (Ty, Tx, 1)
+    attention_energies1 = Reshape((TARGET_SEQ_LEN, SOURCE_SEQ_LEN))(attention_energies1) # (Ty, Tx)
+    attention_weights_sequence1 = TimeDistributed(Activation('softmax'))(attention_energies1) # (Ty, Tx)
+    context_vector_sequence1 = Dot(axes=(2,1))([attention_weights_sequence1, source_hidden_states]) # (Tx, Tx) * (Tx, #h) -> (Ty, #h)
+
+    attention_pre_energies2 = TimeDistributed(TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh')), name='attention_pre_energies2')(concatenate_source_target_hidden_matrix) # (Ty, Tx, 16)
+    attention_energies2 = TimeDistributed(TimeDistributed(Dense(1, activation='linear')), name='attention_energies2')(attention_pre_energies2) # (Ty, Tx, 1)
+    attention_energies2 = Reshape((TARGET_SEQ_LEN, SOURCE_SEQ_LEN))(attention_energies2) # (Ty, Tx)
+    attention_weights_sequence2 = TimeDistributed(Activation('softmax'))(attention_energies2) # (Ty, Tx)
+    context_vector_sequence2 = Dot(axes=(2,1))([attention_weights_sequence2, source_hidden_states]) # (Tx, Tx) * (Tx, #h) -> (Ty, #h)
+
+    attention_pre_energies3 = TimeDistributed(TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh')), name='attention_pre_energies3')(concatenate_source_target_hidden_matrix) # (Ty, Tx, 16)
+    attention_energies3 = TimeDistributed(TimeDistributed(Dense(1, activation='linear')), name='attention_energies3')(attention_pre_energies3) # (Ty, Tx, 1)
+    attention_energies3 = Reshape((TARGET_SEQ_LEN, SOURCE_SEQ_LEN))(attention_energies3) # (Ty, Tx)
+    attention_weights_sequence3 = TimeDistributed(Activation('softmax'))(attention_energies3) # (Ty, Tx)
+    context_vector_sequence3 = Dot(axes=(2,1))([attention_weights_sequence3, source_hidden_states]) # (Tx, Tx) * (Tx, #h) -> (Ty, #h)
 
     # character generator network
-    concatenate_target_and_context = Concatenate()([target_hidden_state_sequence, context_vector_sequence])
+    concatenate_target_and_context = Concatenate()([target_hidden_state_sequence, context_vector_sequence1, context_vector_sequence2, context_vector_sequence3])
     next_character_distribution = TimeDistributed(Dense(TARGET_NUM_CHARS, activation='softmax'), name='generator_distribution')(concatenate_target_and_context)
 
     # next character generator model
