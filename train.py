@@ -34,4 +34,8 @@ training_model.compile(optimizer='adam', loss='sparse_categorical_crossentropy',
 
 checkpoint = ModelCheckpoint(filepath=source_language+'-'+target_language+'_'+datetime.datetime.now().isoformat()+'_{epoch:03d}_{acc:.4f}.hdf5')
 
+if len(sys.argv) > 8:
+    weights_file = sys.argv[8]
+    training_model.load_weights(weights_file, by_name=True)
+
 training_model.fit(x=[source_data, target_data[:,:-1]], y=np.expand_dims(target_data[:,1:], axis=-1), batch_size=100, epochs=5, callbacks=[checkpoint])
