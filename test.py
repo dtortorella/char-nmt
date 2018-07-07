@@ -1,10 +1,19 @@
 import sys
 import numpy as np
 import math
+import keras
+import tensorflow as tf
 
 import data
 import model
 import util
+
+# backend configuration
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+keras.backend.tensorflow_backend.set_session(sess)
+###
 
 source_language = sys.argv[1]
 target_language = sys.argv[2]
@@ -56,8 +65,8 @@ def beam_decode(source_sentence, k, return_k=False):
 target_sentences = []
 
 for i in range(0, num_sentences):
-    target_sentence = beam_decode(source_data[i:i+1, :], 10)
-    #target_sentence = greedy_decode(source_data[i:i+1, :])
+    #target_sentence, score = beam_decode(source_data[i:i+1, :], 10)
+    target_sentence = greedy_decode(source_data[i:i+1, :])
     target_sentences.append(target_sentence)
     print(target_sentence, flush=True)
 

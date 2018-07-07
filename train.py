@@ -1,10 +1,19 @@
 import sys
 import datetime
 import numpy as np
+import keras
+import tensorflow as tf
 from keras.callbacks import ModelCheckpoint
 
 import data
 import model
+
+# backend configuration
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+keras.backend.tensorflow_backend.set_session(sess)
+###
 
 source_language = sys.argv[1]
 target_language = sys.argv[2]
@@ -25,4 +34,4 @@ training_model.compile(optimizer='adam', loss='sparse_categorical_crossentropy',
 
 checkpoint = ModelCheckpoint(filepath=source_language+'-'+target_language+'_'+datetime.datetime.now().isoformat()+'_{epoch:03d}_{acc:.4f}.hdf5')
 
-training_model.fit(x=[source_data, target_data[:,:-1]], y=np.expand_dims(target_data[:,1:], axis=-1), batch_size=20, epochs=5, callbacks=[checkpoint])
+training_model.fit(x=[source_data, target_data[:,:-1]], y=np.expand_dims(target_data[:,1:], axis=-1), batch_size=100, epochs=5, callbacks=[checkpoint])
