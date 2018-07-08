@@ -3,12 +3,12 @@ from keras import Model
 from keras.layers import *
 
 # model parameters
-SOURCE_EMBEDDING = 64
-SOURCE_STATE = 32
-SOURCE_STATE_HALF = 16
-TARGET_EMBEDDING = 64
-TARGET_STATE = 16
-ATTENTION_ENERGY = 16
+SOURCE_EMBEDDING = 32
+SOURCE_STATE = 64
+SOURCE_STATE_HALF = 32
+TARGET_EMBEDDING = 32
+TARGET_STATE = 64
+ATTENTION_ENERGY = 32
 
 def next_character_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_NUM_CHARS):
     # source sentence (fixed length) input, embedding, and sequence of hidden states
