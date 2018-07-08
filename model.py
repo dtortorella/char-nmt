@@ -24,7 +24,9 @@ def next_character_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_NUM_CHARS):
     context_vector0 = Dot(axes=(1,1))([attention_weights0, source_hidden_states])
 
     # target initial state
-    target_init_state = Dense(TARGET_STATE, name='target_initializer')(context_vector0)
+    target_init_state_h = Dense(TARGET_STATE, name='target_initializer_h')(context_vector0)
+    target_init_state_c = Dense(TARGET_STATE, name='target_initializer_c')(context_vector0)
+    target_init_state = [target_init_state_h, target_init_state_c]
 
     # target sequence (variable length) input, embedding, and hidden state
     target_input = Input(shape=(None,), dtype='int32')
@@ -74,7 +76,9 @@ def sequence_training_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_SEQ_LEN, TA
     context_vector0 = Dot(axes=(1,1))([attention_weights0, source_hidden_states])
 
     # target initial state
-    target_init_state = Dense(TARGET_STATE, name='target_initializer')(context_vector0)
+    target_init_state_h = Dense(TARGET_STATE, name='target_initializer_h')(context_vector0)
+    target_init_state_c = Dense(TARGET_STATE, name='target_initializer_c')(context_vector0)
+    target_init_state = [target_init_state_h, target_init_state_c]
 
     # target sequence (fixed length) input, embedding, and hidden state
     target_input = Input(shape=(TARGET_SEQ_LEN,), dtype='int32')
