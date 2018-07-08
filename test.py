@@ -23,6 +23,7 @@ num_sentences = int(sys.argv[5])
 source_max_len = int(sys.argv[6])
 target_max_len = int(sys.argv[7])
 weights_file = sys.argv[8]
+decoding_is_greedy = len(sys.argv) < 10 or sys.argv[9] == 'greedy'
 
 source_chars = data.load_chars(source_language)
 target_chars = data.load_chars(target_language)
@@ -65,8 +66,10 @@ def beam_decode(source_sentence, k, return_k=False):
 target_sentences = []
 
 for i in range(0, num_sentences):
-    #target_sentence, score = beam_decode(source_data[i:i+1, :], 10)
-    target_sentence = greedy_decode(source_data[i:i+1, :])
+    if decoding_is_greedy:
+        target_sentence = greedy_decode(source_data[i:i+1, :])
+    else:
+        target_sentence, score = beam_decode(source_data[i:i+1, :], 10)
     target_sentences.append(target_sentence)
     print(target_sentence, flush=True)
 
