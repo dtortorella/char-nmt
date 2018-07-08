@@ -16,10 +16,20 @@ def next_character_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_NUM_CHARS):
     source_embedding = Embedding(SOURCE_NUM_CHARS, SOURCE_EMBEDDING, name='source_embedding')(source_input)
     source_hidden_states = Bidirectional(LSTM(SOURCE_STATE_HALF, return_sequences=True, name='source_hidden_states'))(source_embedding)
 
+    # self-attention mechanism for target init state
+    attention_pre_energies0 = TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh'), name='attention_pre_energies0')(source_hidden_states)
+    attention_energies0 = TimeDistributed(Dense(1, activation='linear'), name='attention_energies0')(attention_pre_energies0)
+    attention_energies0 = Reshape((SOURCE_SEQ_LEN,))(attention_energies0)
+    attention_weights0 = Activation('softmax')(attention_energies0)
+    context_vector0 = Dot(axes=(1,1))([attention_weights0, source_hidden_states])
+
+    # target initial state
+    target_init_state = Dense(TARGET_STATE, name='target_initializer')(context_vector0)
+
     # target sequence (variable length) input, embedding, and hidden state
     target_input = Input(shape=(None,), dtype='int32')
     target_embedding = Embedding(TARGET_NUM_CHARS, TARGET_EMBEDDING, name='target_embedding')(target_input)
-    target_hidden_state = LSTM(TARGET_STATE, return_sequences=False, name='target_hidden_state')(target_embedding)
+    target_hidden_state = LSTM(TARGET_STATE, return_sequences=False, name='target_hidden_state')(target_embedding, initial_state=target_init_state)
 
     # attention mechanism (Bahdanau et al, 2015)
     repeat_target_hidden_state = RepeatVector(SOURCE_SEQ_LEN)(target_hidden_state)
@@ -56,10 +66,20 @@ def sequence_training_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_SEQ_LEN, TA
     source_embedding = Embedding(SOURCE_NUM_CHARS, SOURCE_EMBEDDING, name='source_embedding')(source_input)
     source_hidden_states = Bidirectional(LSTM(SOURCE_STATE_HALF, return_sequences=True, name='source_hidden_states'))(source_embedding)
 
+    # self-attention mechanism for target init state
+    attention_pre_energies0 = TimeDistributed(Dense(ATTENTION_ENERGY, activation='tanh'), name='attention_pre_energies0')(source_hidden_states)
+    attention_energies0 = TimeDistributed(Dense(1, activation='linear'), name='attention_energies0')(attention_pre_energies0)
+    attention_energies0 = Reshape((SOURCE_SEQ_LEN,))(attention_energies0)
+    attention_weights0 = Activation('softmax')(attention_energies0)
+    context_vector0 = Dot(axes=(1,1))([attention_weights0, source_hidden_states])
+
+    # target initial state
+    target_init_state = Dense(TARGET_STATE, name='target_initializer')(context_vector0)
+
     # target sequence (fixed length) input, embedding, and hidden state
     target_input = Input(shape=(TARGET_SEQ_LEN,), dtype='int32')
     target_embedding = Embedding(TARGET_NUM_CHARS, TARGET_EMBEDDING, name='target_embedding')(target_input)
-    target_hidden_state_sequence = LSTM(TARGET_STATE, return_sequences=True, name='target_hidden_state')(target_embedding)
+    target_hidden_state_sequence = LSTM(TARGET_STATE, return_sequences=True, name='target_hidden_state')(target_embedding, initial_state=target_init_state)
 
     # attention mechanism (Bahdanau et al, 2015)
     target_hidden_state_sequence = Reshape((TARGET_SEQ_LEN, TARGET_STATE))(target_hidden_state_sequence)
