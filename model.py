@@ -9,6 +9,8 @@ SOURCE_STATE_HALF = 32
 TARGET_EMBEDDING = 32
 TARGET_STATE = 64
 ATTENTION_ENERGY = 32
+PRE_DISTRIBUTION = 512
+PRE_DISTRIBUTION_DROPOUT = 0.25
 
 def next_character_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_NUM_CHARS):
     # source sentence (fixed length) input, embedding, and sequence of hidden states
@@ -45,7 +47,8 @@ def next_character_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_NUM_CHARS):
 
     # character generator network
     concatenate_target_and_context = Concatenate()([target_hidden_state, context_vector1, context_vector2, context_vector3])
-    next_character_distribution = Dense(TARGET_NUM_CHARS, activation='softmax', name='generator_distribution')(concatenate_target_and_context)
+    pre_distribution = Dense(PRE_DISTRIBUTION, activation='relu', name='pre_generator_distribution')(concatenate_target_and_context)
+    next_character_distribution = Dense(TARGET_NUM_CHARS, activation='softmax', name='generator_distribution')(pre_distribution)
 
     # next character generator model
     return Model([source_input, target_input], next_character_distribution)
@@ -90,7 +93,9 @@ def sequence_training_model(SOURCE_SEQ_LEN, SOURCE_NUM_CHARS, TARGET_SEQ_LEN, TA
 
     # character generator network
     concatenate_target_and_context = Concatenate()([target_hidden_state_sequence, context_vector_sequence1, context_vector_sequence2, context_vector_sequence3])
-    next_character_distribution = TimeDistributed(Dense(TARGET_NUM_CHARS, activation='softmax'), name='generator_distribution')(concatenate_target_and_context)
+    pre_distribution = TimeDistributed(Dense(PRE_DISTRIBUTION, activation='relu'), name='pre_generator_distribution')(concatenate_target_and_context)
+    pre_distribution = TimeDistributed(Dropout(PRE_DISTRIBUTION_DROPOUT))(pre_distribution)
+    next_character_distribution = TimeDistributed(Dense(TARGET_NUM_CHARS, activation='softmax'), name='generator_distribution')(pre_distribution)
 
     # next character generator model
     return Model([source_input, target_input], next_character_distribution)
