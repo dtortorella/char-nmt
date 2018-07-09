@@ -9,6 +9,15 @@ def load_chars(lang):
         chars = f.read()
     return util.map_characters_to_integers(chars)
 
+def load_chars_jointly(*langs):
+    chars = ''
+    for lang in langs:
+        with open("./data/chars." + lang, 'r', encoding='utf-8') as f:
+            chars += f.read()
+    charset = set(chars)
+    chars = ''.join(sorted(charset))
+    return util.map_characters_to_integers(chars)
+
 def load_source(file_path, num_lines, max_line_length, chars):
     source = np.empty([num_lines, max_line_length], dtype=np.int16)
     with open(file_path, 'r', encoding='utf-8') as f:
